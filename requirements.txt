@@ -1,0 +1,14 @@
+deepface==0.0.68
+pinecone-client
+opencv-python==4.5.5.64
+Flask
+numpy
+Werkzeug
+streamlit
+Pillow
+mtcnn
+waitress
+fastapi
+uvicorn
+python-multipart
+-e .
