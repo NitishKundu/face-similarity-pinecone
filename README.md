@@ -9,7 +9,7 @@ The project aims to automate the identification of repeat customers using facial
 ## Key Features ##
 1. **`Facial Recognition`**: Uses MTCNN for accurate face detection in customer images.
 2. **`Vector Embedding`**: Converts facial images into numerical vectors using the DeepFace-FaceNet model.
-3. **`Efficient Database`**: Management: Employs Pinecone, a vector database, for storing and querying facial embeddings.
+3. **`Efficient Database Management`**: Employs Pinecone, a vector database, for storing and querying facial embeddings.
 4. **`API Functionality`**: Provides a set of APIs for matching images, upserting, deleting, and updating vectors with API key authentication for secure access.
 
 
@@ -52,6 +52,12 @@ Set the top_k parameter based on the desired matching precision.
 ## API Authentication ##
 1. Implement API key authentication to validate and secure API usage.
 2. Ensure proper management of API keys to prevent unauthorized access.
+
+## Testing API ##
+`Run command to test API using Postman`:
+```
+uvicorn app_fastapi:app --host 127.0.0.1 --port 5000 --reload
+```
 
 ## Data Privacy ##
 Adhere to data privacy laws and ensure secure handling of sensitive customer data, especially facial images.
