@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: face-sim-pinecone-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: face-sim-pinecone
+  template:
+    metadata:
+      labels:
+        app: face-sim-pinecone
+    spec:
+      containers:
+      - name: face-sim-pinecone
+        image: nitishkundu/face_sim_pinecone:latest
+        resources:
+          requests:
+            cpu: "4000m"  # Requesting 4 cores
+            memory: "10Gi"  # Requesting 10 GB of memory
+          limits:
+            cpu: "4000m"  # Limiting to a maximum of 4 cores
+            memory: "10Gi"  # Limiting to a maximum of 10 GB of memory
