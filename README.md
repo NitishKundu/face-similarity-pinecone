@@ -46,8 +46,8 @@ pip install mtcnn deepface pinecone-client
 ```
 
 ## Configuration ##
-   * Configure the Pinecone API key and database settings.
-   * Set the top_k parameter based on the desired matching precision.
+Configure the Pinecone API key and database settings.
+Set the top_k parameter based on the desired matching precision.
 
 ## API Authentication ##
 1. Implement API key authentication to validate and secure API usage.

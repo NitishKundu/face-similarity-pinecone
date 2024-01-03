@@ -11,4 +11,5 @@ waitress
 fastapi
 uvicorn
 python-multipart
--e .
+gunicorn
+# -e .

@@ -21,7 +21,7 @@ def get_requirements(file_path:str)->List[str]:
 
 
 setup(
-    name='FaceSimilarityMatchingWithPinecone',
+    name='FaceSimilarityMatchingPinecone',
     version='1.0',
     author="Nitish",
     author_email="nitishkundu1993@gmail.com",

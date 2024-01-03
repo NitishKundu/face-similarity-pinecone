@@ -18,7 +18,6 @@ config = load_config('config.json')
 API_KEY_PINECONE = config['API_KEY_PINECONE']
 ENVIRONMENT = config['ENVIRONMENT']
 INDEX_NAME = config['INDEX_NAME']
-DIMENSIONS = 128
 
 
 # Initialize Pinecone index

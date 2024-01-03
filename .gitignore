@@ -124,10 +124,12 @@ celerybeat.pid
 .venv
 env/
 venv/
+fspvenv/
 ENV/
 env.bak/
 venv.bak/
 config.json
+.dockerignore
 
 # Spyder project settings
 .spyderproject

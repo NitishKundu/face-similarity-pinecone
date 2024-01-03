@@ -1,10 +1,10 @@
+import asyncio
 from src.components.deepface_module_fastapi import extract_embedding
-from src.components.pinecone_module_fastapi import init_pinecone, insert_to_index, query_index, remove_from_index
-from src.logger import logging
-from src.exception import CustomException
+from src.components.pinecone_module_fastapi import insert_to_index
 import os
 import json
 import pinecone
+from src.logger import logging
 
 
 
@@ -13,39 +13,44 @@ def load_config(file_path):
         return json.load(file)
 
 
-def main():
-    
+async def main():
     config = load_config('config.json')
     API_KEY_PINECONE = config['API_KEY_PINECONE']
     ENVIRONMENT = config['ENVIRONMENT']
     INDEX_NAME = config['INDEX_NAME']
-    DIMENSIONS = 128
+    DIMENSIONS = config['DIMENSIONS']
     IMAGE_FOLDER_PATH = "C:/Users/Nitish Kundu/Documents/image_data/images"
 
-    pinecone.init(      
-            api_key=API_KEY_PINECONE,      
-            environment=ENVIRONMENT,
-            dimensions=DIMENSIONS   
-            )
+    # Initialize Pinecone
+    pinecone.init(api_key=API_KEY_PINECONE, environment=ENVIRONMENT)
+
+    # Check if the index already exists
+    active_indexes = pinecone.list_indexes()
+    if INDEX_NAME not in active_indexes:
+        pinecone.create_index(name=INDEX_NAME, dimension=DIMENSIONS)
+        logging.info(f'Created new Pinecone index: {INDEX_NAME}')
+    else:
+        logging.info(f'Index "{INDEX_NAME}" already exists.')
+
+    # Connect to the Pinecone index
     index = pinecone.Index(INDEX_NAME)
 
     for image_file in os.listdir(IMAGE_FOLDER_PATH):
         file_id = os.path.splitext(image_file)[0]
         image_path = os.path.join(IMAGE_FOLDER_PATH, image_file)
-        embedding, error = extract_embedding(image_path)
+        embedding, error = await extract_embedding(image_path)
 
         if error:
             logging.info(f"{error} in image {image_file}")
             continue
 
-        insert_to_index(index, file_id, embedding)
-    
-    logging.info('Index created and uploded successfully')   
-    print('Index created and uploded successfully')
+        await insert_to_index(index, file_id, embedding)
 
+    logging.info('Embeddings uploaded successfully')   
+    print('Embeddings uploaded successfully')
 
 if __name__ == "__main__":
     try:
-        main()
+        asyncio.run(main())
     except Exception as e:
         logging.error(f"Unexpected error: {str(e)}")
