@@ -144,3 +144,55 @@ def _update_index_sync(index, vector_id, new_values):
         return update_response
     except Exception as e:
         raise e
+    
+    
+    
+    
+    
+async def insert_to_index_full(index, user_ids, embeddings):
+    """
+    Asynchronously inserts vectors with given user IDs and embeddings into the Pinecone index.
+    This function supports both single and multiple vector insertions.
+
+    Args:
+        index (PineconeIndex): The Pinecone index to insert vectors into.
+        user_ids (list of str): The IDs of the vectors.
+        embeddings (list of list): The embedding vectors to be inserted.
+
+    Raises:
+        CustomException: If there is an error inserting data into the Pinecone index.
+
+    Returns:
+        None
+    """
+    try:
+        await asyncio.to_thread(_insert_to_index_full_sync, index, user_ids, embeddings)
+    except Exception as e:
+        raise CustomException(str(e), sys)
+
+def _insert_to_index_full_sync(index, user_ids, embeddings):
+    try:
+        vector_data = []
+        for user_id, embedding in zip(user_ids, embeddings):
+            # Check if the vector with the given ID already exists
+            existing_vector = index.fetch(ids=[user_id])
+            if existing_vector['vectors'].get(user_id) is not None:
+                logging.info(f"Vector with ID {user_id} already exists in the index. Skipping insertion.")
+                continue
+
+            if not embedding or not isinstance(embedding, list):
+                logging.warning(f"Invalid embedding for {user_id}. Skipping insertion.")
+                continue
+
+            # Structure the data correctly for Pinecone's upsert method
+            vector_data.append({'id': user_id, 'values': embedding})
+
+        if not vector_data:
+            logging.warning("No valid data to insert. Skipping.")
+            return
+
+        logging.info(f"Inserting embeddings for user IDs: {user_ids}...")
+        index.upsert(vectors=vector_data)
+        logging.info("Inserted embeddings into Pinecone index.")
+    except Exception as e:
+        logging.error(f"Error inserting data into Pinecone index: {str(e)}")

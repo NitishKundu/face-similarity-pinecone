@@ -5,7 +5,7 @@ import os
 import shutil
 import tempfile
 from src.components.deepface_module_fastapi import extract_embedding
-from src.components.pinecone_module_fastapi import insert_to_index, query_index, remove_from_index, update_index
+from src.components.pinecone_module_fastapi import insert_to_index, query_index, remove_from_index, update_index, insert_to_index_full
 from src.exception import CustomException
 import pinecone
 import tempfile
@@ -114,7 +114,7 @@ async def query_index_endpoint(file: UploadFile = File(...), api_key: APIKey = D
         
         
         
-@app.post("/ReplaceImage")
+@app.post("/UpdateImage")
 async def update_vector_endpoint(user_id: str, file: UploadFile = File(...), api_key: APIKey = Depends(get_api_key)):
     """
     Endpoint to update a vector in the Pinecone index.
@@ -149,6 +149,82 @@ async def update_vector_endpoint(user_id: str, file: UploadFile = File(...), api
         # Cleanup: remove the temporary file in case of an error
         os.unlink(temp_file_name)
         raise HTTPException(status_code=500, detail=str(e))
+    
+    
+    
+    
+@app.post("/AddImagesToIndexMultiple")
+async def add_images(files: List[UploadFile] = File(...), api_key: APIKey = Depends(get_api_key)):
+    embeddings = []
+    file_ids = []
+    temp_files = []
+
+    for file in files:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+            shutil.copyfileobj(file.file, temp_file)
+            temp_files.append(temp_file.name)
+
+    try:
+        for temp_file_name, file in zip(temp_files, files):
+            embedding, error = await extract_embedding(temp_file_name)
+            if error:
+                raise HTTPException(status_code=500, detail=error)
+
+            file_id = os.path.splitext(file.filename)[0]
+            embeddings.append(embedding)
+            file_ids.append(file_id)
+
+        if embeddings:
+            await insert_to_index_full(index, file_ids, embeddings)
+        
+        return {"message": "Images added successfully", "ids": file_ids}
+    finally:
+        for temp_file_name in temp_files:
+            os.unlink(temp_file_name)
+            
+            
+            
+            
+            
+            
+@app.post("/ReplaceImage")
+async def update_vector(user_id: str, file: UploadFile = File(...), api_key: APIKey = Depends(get_api_key)):
+    """
+    Endpoint to replace a vector in the Pinecone index.
+    Deletes the vector associated with the provided user ID and inserts a new vector with the new image name as ID.
+    """
+    # Create a temporary file to save the uploaded image
+    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+        shutil.copyfileobj(file.file, temp_file)
+        temp_file_name = temp_file.name
+
+    try:
+        # Extract embedding from the image file
+        embedding, error = await extract_embedding(temp_file_name)
+
+        # Cleanup: remove the temporary file
+        os.unlink(temp_file_name)
+
+        # Check for errors in embedding extraction
+        if error:
+            raise HTTPException(status_code=400, detail=f"Error in embedding extraction: {error}")
+
+        # Remove the existing vector from Pinecone index
+        await remove_from_index(index, user_id)
+
+        # Use the new image name (without extension) as the new ID
+        new_user_id = os.path.splitext(file.filename)[0]
+
+        # Insert the new vector into Pinecone index
+        await insert_to_index(index, new_user_id, embedding)
+
+        return {"message": "Vector replaced successfully", "old_id": user_id, "new_id": new_user_id}
+    except Exception as e:
+        # Cleanup: remove the temporary file in case of an error
+        os.unlink(temp_file_name)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 
 
