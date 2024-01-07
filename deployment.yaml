@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: face-sim-pinecone
-        image: nitishkundu/face_sim_pinecone:latest
+        image: nitishkundu/face-sim-pinecone:latest
         resources:
           requests:
             cpu: "4000m"  # Requesting 4 cores
